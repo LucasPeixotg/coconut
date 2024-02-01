@@ -13,7 +13,7 @@ import (
 
 // tab bar style
 var (
-	activeTabBorder     = lipgloss.Border{"─", " ", "│", "│", "┬", "┬", "┘", "└", "", "", "", "", ""}
+	activeTabBorder     = lipgloss.Border{"─", " ", "│", "│", "┬", "┬", "╯", "╰", "", "", "", "", ""}
 	inactiveTabBorder   = lipgloss.Border{"─", "─", "", "│", "─", "┬", "─", "┴", "", "", "", "", "─"}
 	neighbourTabBorderR = lipgloss.Border{"─", "─", "", "│", "─", "┬", "─", "┴", "", "", "", "", "─"}
 	neighbourTabBorderL = lipgloss.Border{
