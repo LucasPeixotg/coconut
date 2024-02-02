@@ -94,7 +94,7 @@ var (
 
 	inactiveBorderStartLeft = borderSide{top: "┌", middle: "│", bottom: "├"}
 	inactiveBorderRight     = borderSide{top: "┬", middle: "│", bottom: "┴"}
-	inactiveBorderEndRight  = borderSide{top: "╮", middle: "│", bottom: "┘"}
+	inactiveBorderEndRight  = borderSide{top: "╮", middle: "│", bottom: "╯"}
 
 	hiddenBorder = borderSide{top: "─", middle: " ", bottom: "─"}
 )
