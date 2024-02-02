@@ -8,7 +8,20 @@ import (
 
 var editorStyle = textarea.Style{
 	Prompt: lipgloss.NewStyle().
-		Foreground(lipgloss.Color("#7d7d7d")),
+		Foreground(lipgloss.Color("#999999")),
+	Text: lipgloss.NewStyle().
+		Foreground(lipgloss.Color("#eeeeee")),
+	LineNumber: lipgloss.NewStyle().
+		Foreground(lipgloss.Color("#40575c")).
+		Width(6).
+		Align(lipgloss.Right).
+		PaddingRight(2),
+	CursorLineNumber: lipgloss.NewStyle().
+		Foreground(lipgloss.Color("#a2d5e0")).
+		Bold(true).
+		Width(6).
+		Align(lipgloss.Right).
+		PaddingRight(2),
 }
 
 type Editor struct {
