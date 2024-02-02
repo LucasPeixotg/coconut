@@ -3,18 +3,31 @@ package editor
 import (
 	"github.com/charmbracelet/bubbles/textarea"
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/charmbracelet/lipgloss"
 )
 
+var editorStyle = textarea.Style{
+	Prompt: lipgloss.NewStyle().
+		Foreground(lipgloss.Color("#7d7d7d")),
+}
+
 type Editor struct {
-	Title    string
 	textarea textarea.Model
 	content  string
 }
 
-func NewEditor() *Editor {
+func NewEditor(width, height int) *Editor {
+	textarea := textarea.New()
+	textarea.SetHeight(height)
+	textarea.SetWidth(width)
+	textarea.MaxHeight = 9999
+	textarea.FocusedStyle = editorStyle
+	textarea.BlurredStyle = editorStyle
+	textarea.Prompt = "│"
+
 	return &Editor{
 		content:  "",
-		textarea: textarea.New(),
+		textarea: textarea,
 	}
 }
 

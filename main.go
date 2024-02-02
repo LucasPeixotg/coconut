@@ -2,6 +2,7 @@ package main
 
 import (
 	"coconut/editor"
+	"coconut/tab"
 	"fmt"
 	"os"
 
@@ -9,46 +10,6 @@ import (
 	"github.com/charmbracelet/bubbles/key"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
-)
-
-// tab bar style
-var (
-	activeTabBorder     = lipgloss.Border{"─", " ", "│", "│", "┬", "┬", "╯", "╰", "", "", "", "", ""}
-	inactiveTabBorder   = lipgloss.Border{"─", "─", "", "│", "─", "┬", "─", "┴", "", "", "", "", "─"}
-	neighbourTabBorderR = lipgloss.Border{"─", "─", "", "│", "─", "┬", "─", "┴", "", "", "", "", "─"}
-	neighbourTabBorderL = lipgloss.Border{
-		Top:          "─",
-		Bottom:       "─",
-		Left:         "",
-		Right:        "",
-		TopLeft:      "─",
-		TopRight:     "─",
-		BottomLeft:   "─",
-		BottomRight:  "─",
-		MiddleLeft:   "",
-		MiddleRight:  "",
-		Middle:       "",
-		MiddleTop:    "",
-		MiddleBottom: "─"}
-
-	tabStyle = lipgloss.NewStyle().
-			Foreground(lipgloss.Color("#7d7d7d")).
-			Padding(0, 2, 0, 2).
-			BorderForeground(lipgloss.Color("#7d7d7d"))
-	activeTabStyle = lipgloss.NewStyle().
-			Inherit(tabStyle).
-		//BorderForeground(lipgloss.Color("#dbdbdb")).
-		Foreground(lipgloss.Color("#dbdbdb")).
-		Border(activeTabBorder)
-	inactiveTabStyle = lipgloss.NewStyle().
-				Inherit(tabStyle).
-				Border(inactiveTabBorder)
-	neighbourTabStyleR = lipgloss.NewStyle().
-				Inherit(tabStyle).
-				Border(neighbourTabBorderR)
-	neighbourTabStyleL = lipgloss.NewStyle().
-				Inherit(tabStyle).
-				Border(neighbourTabBorderL)
 )
 
 // **
@@ -91,7 +52,7 @@ type model struct {
 	quitting  bool
 	width     int
 	height    int
-	tabs      []*editor.Editor
+	tabs      []tab.Tab
 	activeTab int
 }
 
@@ -147,9 +108,12 @@ func (m *model) nextTab() {
 }
 
 func (m *model) newEditor() {
-	newEditor := editor.NewEditor()
-	newEditor.Title = "  unnamed  "
-	m.tabs = append(m.tabs, newEditor)
+	tab := tab.Tab{}
+
+	tab.SetTitle("unnamed")
+	tab.Content = editor.NewEditor(m.width, m.height-3)
+
+	m.tabs = append(m.tabs, tab)
 }
 
 // initializes the event loop
@@ -161,7 +125,7 @@ func (m model) Init() tea.Cmd {
 func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	var editor_cmd tea.Cmd
 	if len(m.tabs) > 0 {
-		_, editor_cmd = m.tabs[m.activeTab].Update(msg)
+		_, editor_cmd = m.tabs[m.activeTab].Content.Update(msg)
 	}
 
 	var cmd tea.Cmd
@@ -179,11 +143,11 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			return m, tea.Quit
 		case key.Matches(msg, m.keys.NewFile):
 			m.newEditor()
-			cmd = m.tabs[len(m.tabs)-1].Focus()
+			cmd = m.tabs[len(m.tabs)-1].Content.Focus()
 		case key.Matches(msg, m.keys.NextTab):
 			// change active tab
 			m.nextTab()
-			cmd = m.tabs[m.activeTab].Focus()
+			cmd = m.tabs[m.activeTab].Content.Focus()
 		}
 	}
 
@@ -202,21 +166,12 @@ func (m model) View() string {
 	if len(m.tabs) == 0 {
 		content += lipgloss.Place(m.width, m.height, lipgloss.Center, lipgloss.Center, m.help.View(m.keys))
 	} else {
-		for i := 0; i < len(m.tabs); i++ {
-			var tabstring string
-			if i == m.activeTab {
-				tabstring = activeTabStyle.Render(m.tabs[i].Title)
-			} else if i+1 == m.activeTab {
-				tabstring = neighbourTabStyleL.Render(m.tabs[i].Title)
-			} else if i-1 == m.activeTab {
-				tabstring = neighbourTabStyleR.Render(m.tabs[i].Title)
-			} else {
-				tabstring = inactiveTabStyle.Render(m.tabs[i].Title)
-			}
-			content = lipgloss.JoinHorizontal(lipgloss.Left, content, tabstring)
+		tabCount := len(m.tabs)
+		for i := 0; i < tabCount; i++ {
+			content = lipgloss.JoinHorizontal(lipgloss.Left, content, m.tabs[i].View(i, m.activeTab, tabCount))
 		}
 
-		content = lipgloss.JoinVertical(lipgloss.Top, content, m.tabs[m.activeTab].View())
+		content = lipgloss.JoinVertical(lipgloss.Top, content, m.tabs[m.activeTab].Content.View())
 	}
 
 	return content
