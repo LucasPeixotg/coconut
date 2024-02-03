@@ -1,1 +1,3 @@
 # coconut
+
+CLI text editor

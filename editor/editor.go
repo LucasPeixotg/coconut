@@ -54,6 +54,12 @@ func NewFileEditor(width, height int, filename string) (*Editor, error) {
 	return editor, err
 }
 
+func OpenFileEditor(width, height int, filename string) (*Editor, error) {
+	editor := newEditor(width, height)
+	err := editor.loadFile(filename)
+	return editor, err
+}
+
 // initializes the event loop
 func (e Editor) Init() tea.Cmd {
 	return nil
@@ -75,7 +81,6 @@ func (e *Editor) Focus() tea.Cmd {
 }
 
 // ** file related functions
-
 func (e *Editor) newFile(filename string) error {
 	file, err := os.Create("./" + filename)
 
@@ -88,8 +93,26 @@ func (e *Editor) newFile(filename string) error {
 	return nil
 }
 
+func (e *Editor) loadFile(filename string) error {
+	file, err := os.OpenFile("./"+filename, os.O_RDWR, os.ModePerm)
+	if err != nil {
+		return err
+	}
+	e.file = file
+
+	value, err := io.ReadAll(e.file)
+	if err != nil {
+		return err
+	}
+
+	e.textarea.SetValue(string(value))
+	return nil
+}
+
 func (e *Editor) Save() error {
-	_, err := io.WriteString(e.file, e.textarea.Value())
+	e.file.Truncate(0)
+	e.file.Seek(0, 0)
+	_, err := e.file.Write([]byte(e.textarea.Value()))
 	return err
 }
 

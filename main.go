@@ -115,13 +115,30 @@ func (m *model) nextTab() {
 func (m *model) newEditor() {
 	tab := tab.Tab{}
 
-	tab.SetTitle("teste.txt")
 	var err error
-	tab.Content, err = editor.NewFileEditor(m.width, m.height-3, "teste.txt")
+	tab.Content, err = editor.NewFileEditor(m.width, m.height-3, "teste.md")
+
+	tab.SetTitle("teste.md")
 
 	// this panic is temporary (just for tests)
 	if err != nil {
-		panic("error while creating file")
+		panic("error while creating file: " + err.Error())
+	}
+
+	m.tabs = append(m.tabs, tab)
+}
+
+func (m *model) loadEditor() {
+	tab := tab.Tab{}
+
+	var err error
+	tab.Content, err = editor.OpenFileEditor(m.width, m.height-3, "README.md")
+
+	tab.SetTitle("README.md")
+
+	// this panic is temporary (just for tests)
+	if err != nil {
+		panic("error while opening file: " + err.Error())
 	}
 
 	m.tabs = append(m.tabs, tab)
@@ -155,6 +172,9 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case key.Matches(msg, m.keys.NewFile):
 			m.newEditor()
 			cmd = m.tabs[len(m.tabs)-1].Content.Focus()
+		case key.Matches(msg, m.keys.OpenFile):
+			m.loadEditor()
+			cmd = m.tabs[len(m.tabs)-1].Content.Focus()
 		case key.Matches(msg, m.keys.NextTab):
 			// change active tab
 			m.nextTab()
@@ -166,7 +186,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 				// temporary panic just for tests
 				if err != nil {
-					panic("error while saving file")
+					panic("error while saving file: " + err.Error())
 				}
 			}
 		}
