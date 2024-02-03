@@ -35,6 +35,7 @@ type keyMap struct {
 	OpenDir  key.Binding
 	NewFile  key.Binding
 	NextTab  key.Binding
+	SaveFile key.Binding
 }
 
 func (k keyMap) ShortHelp() []key.Binding {
@@ -82,6 +83,10 @@ func newModel() *model {
 			key.WithKeys("shift+tab"),
 			key.WithHelp("shift+tab", "next tab"),
 		),
+		SaveFile: key.NewBinding(
+			key.WithKeys("ctrl+s"),
+			key.WithHelp("ctrl+s", "save file"),
+		),
 	}
 
 	return &model{
@@ -110,8 +115,14 @@ func (m *model) nextTab() {
 func (m *model) newEditor() {
 	tab := tab.Tab{}
 
-	tab.SetTitle("unnamed")
-	tab.Content = editor.NewEditor(m.width, m.height-3)
+	tab.SetTitle("teste.txt")
+	var err error
+	tab.Content, err = editor.NewFileEditor(m.width, m.height-3, "teste.txt")
+
+	// this panic is temporary (just for tests)
+	if err != nil {
+		panic("error while creating file")
+	}
 
 	m.tabs = append(m.tabs, tab)
 }
@@ -148,6 +159,16 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			// change active tab
 			m.nextTab()
 			cmd = m.tabs[m.activeTab].Content.Focus()
+		case key.Matches(msg, m.keys.SaveFile):
+			// save current editor
+			if len(m.tabs) > 0 {
+				err := m.tabs[m.activeTab].Content.Save()
+
+				// temporary panic just for tests
+				if err != nil {
+					panic("error while saving file")
+				}
+			}
 		}
 	}
 

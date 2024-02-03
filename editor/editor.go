@@ -1,6 +1,9 @@
 package editor
 
 import (
+	"io"
+	"os"
+
 	"github.com/charmbracelet/bubbles/textarea"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
@@ -26,10 +29,11 @@ var editorStyle = textarea.Style{
 
 type Editor struct {
 	textarea textarea.Model
+	file     *os.File
 	content  string
 }
 
-func NewEditor(width, height int) *Editor {
+func newEditor(width, height int) *Editor {
 	textarea := textarea.New()
 	textarea.SetHeight(height)
 	textarea.SetWidth(width)
@@ -42,6 +46,12 @@ func NewEditor(width, height int) *Editor {
 		content:  "",
 		textarea: textarea,
 	}
+}
+
+func NewFileEditor(width, height int, filename string) (*Editor, error) {
+	editor := newEditor(width, height)
+	err := editor.newFile(filename)
+	return editor, err
 }
 
 // initializes the event loop
@@ -62,4 +72,29 @@ func (e *Editor) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 func (e *Editor) Focus() tea.Cmd {
 	return e.textarea.Focus()
+}
+
+// ** file related functions
+
+func (e *Editor) newFile(filename string) error {
+	file, err := os.Create("./" + filename)
+
+	if err != nil {
+		return err
+	}
+
+	e.file = file
+
+	return nil
+}
+
+func (e *Editor) Save() error {
+	_, err := io.WriteString(e.file, e.textarea.Value())
+	return err
+}
+
+func (e *Editor) Close() {
+	if e.file != nil {
+		e.file.Close()
+	}
 }
