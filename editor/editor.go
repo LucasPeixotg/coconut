@@ -1,7 +1,6 @@
 package editor
 
 import (
-	"io"
 	"os"
 
 	"github.com/charmbracelet/bubbles/textarea"
@@ -30,10 +29,10 @@ var editorStyle = textarea.Style{
 type Editor struct {
 	textarea textarea.Model
 	file     *os.File
-	content  string
+	filename string
 }
 
-func newEditor(width, height int) *Editor {
+func newEditor(width, height int, filename string) *Editor {
 	textarea := textarea.New()
 	textarea.SetHeight(height)
 	textarea.SetWidth(width)
@@ -43,20 +42,20 @@ func newEditor(width, height int) *Editor {
 	textarea.Prompt = "│"
 
 	return &Editor{
-		content:  "",
+		filename: filename,
 		textarea: textarea,
 	}
 }
 
 func NewFileEditor(width, height int, filename string) (*Editor, error) {
-	editor := newEditor(width, height)
-	err := editor.newFile(filename)
+	editor := newEditor(width, height, filename)
+	err := editor.newFile()
 	return editor, err
 }
 
 func OpenFileEditor(width, height int, filename string) (*Editor, error) {
-	editor := newEditor(width, height)
-	err := editor.loadFile(filename)
+	editor := newEditor(width, height, filename)
+	err := editor.loadFile()
 	return editor, err
 }
 
@@ -81,8 +80,8 @@ func (e *Editor) Focus() tea.Cmd {
 }
 
 // ** file related functions
-func (e *Editor) newFile(filename string) error {
-	file, err := os.Create("./" + filename)
+func (e *Editor) newFile() error {
+	file, err := os.Create(e.filename)
 
 	if err != nil {
 		return err
@@ -93,19 +92,19 @@ func (e *Editor) newFile(filename string) error {
 	return nil
 }
 
-func (e *Editor) loadFile(filename string) error {
-	file, err := os.OpenFile("./"+filename, os.O_RDWR, os.ModePerm)
+func (e *Editor) loadFile() error {
+	file, err := os.OpenFile(e.filename, os.O_RDWR, os.ModePerm)
 	if err != nil {
 		return err
 	}
 	e.file = file
 
-	value, err := io.ReadAll(e.file)
+	buffer, err := os.ReadFile(e.filename)
 	if err != nil {
 		return err
 	}
 
-	e.textarea.SetValue(string(value))
+	e.textarea.SetValue(string(buffer))
 	return nil
 }
 
