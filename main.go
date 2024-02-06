@@ -5,10 +5,12 @@ import (
 	"coconut/tab"
 	"fmt"
 	"os"
+	"path"
 
 	"github.com/charmbracelet/bubbles/filepicker"
 	"github.com/charmbracelet/bubbles/help"
 	"github.com/charmbracelet/bubbles/key"
+	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 )
@@ -30,13 +32,14 @@ func main() {
 
 // keybindings
 type keyMap struct {
-	Quit     key.Binding
-	Help     key.Binding
-	OpenFile key.Binding
-	OpenDir  key.Binding
-	NewFile  key.Binding
-	NextTab  key.Binding
-	SaveFile key.Binding
+	Quit       key.Binding
+	Help       key.Binding
+	OpenFile   key.Binding
+	OpenDir    key.Binding
+	NewFile    key.Binding
+	NextTab    key.Binding
+	SaveFile   key.Binding
+	SubmitForm key.Binding
 }
 
 func (k keyMap) ShortHelp() []key.Binding {
@@ -52,6 +55,7 @@ type FilepickerType uint8
 const (
 	None FilepickerType = iota
 	NewFile
+	NewFileName
 	OpenFile
 	OpenDir
 )
@@ -62,6 +66,8 @@ type model struct {
 	help             help.Model
 	filepickerStatus FilepickerType
 	filepicker       filepicker.Model
+	filenameInput    textinput.Model
+	currentFilepath  string
 	quitting         bool
 	width            int
 	height           int
@@ -99,17 +105,24 @@ func newModel() *model {
 			key.WithKeys("ctrl+s"),
 			key.WithHelp("ctrl+s", "save file"),
 		),
+		SubmitForm: key.NewBinding(
+			key.WithKeys("enter"),
+			key.WithHelp("enter", "submit form"),
+		),
 	}
 
 	m := &model{
-		help:       help.New(),
-		keys:       keys,
-		filepicker: filepicker.New(),
+		help:          help.New(),
+		keys:          keys,
+		filepicker:    filepicker.New(),
+		filenameInput: textinput.New(),
 	}
 
 	m.filepicker.CurrentDirectory, _ = os.UserHomeDir()
 	m.filepicker.ShowHidden = true
 	m.filepicker.Styles.Permission = lipgloss.NewStyle().Width(0)
+
+	m.filenameInput.Placeholder = "File name"
 
 	return m
 }
@@ -131,13 +144,13 @@ func (m *model) nextTab() {
 	}
 }
 
-func (m *model) newEditor(path string) {
+func (m *model) newEditor(filepath, filename string) {
 	tab := tab.Tab{}
 
 	var err error
-	tab.Content, err = editor.NewFileEditor(m.width, m.height-3, "teste.md")
+	tab.Content, err = editor.NewFileEditor(m.width, m.height-3, path.Join(filepath, filename))
 
-	tab.SetTitle(path)
+	tab.SetTitle(filename)
 
 	// this panic is temporary (just for tests)
 	if err != nil {
@@ -225,6 +238,14 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 					panic("error while saving file: " + err.Error())
 				}
 			}
+		case key.Matches(msg, m.keys.SubmitForm):
+			// handles every form submition
+			if m.filepickerStatus == NewFileName {
+				m.newEditor(m.currentFilepath, m.filenameInput.Value())
+				cmd = m.tabs[len(m.tabs)-1].Content.Focus()
+
+				m.filepickerStatus = None
+			}
 		}
 	}
 
@@ -234,21 +255,29 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	}
 
 	// updates filepicker
-	m.filepicker, filepickerCmd = m.filepicker.Update(msg)
+	if m.filepickerStatus != None && m.filepickerStatus != NewFileName {
+		m.filepicker, filepickerCmd = m.filepicker.Update(msg)
 
-	// check if it was selected
-	if m.filepickerStatus != None {
+		// check if it was selected
 		if selected, path := m.filepicker.DidSelectFile(msg); selected {
 			switch m.filepickerStatus {
 			case NewFile:
-				m.newEditor(path)
-				cmd = m.tabs[len(m.tabs)-1].Content.Focus()
+				m.currentFilepath = path
+				m.filenameInput.Width = m.width / 3
+				filepickerCmd = m.filenameInput.Focus()
+
+				m.filepickerStatus = NewFileName
 			case OpenFile:
 				m.loadEditor(path)
 				cmd = m.tabs[len(m.tabs)-1].Content.Focus()
+				m.filepickerStatus = None
 			}
-			m.filepickerStatus = None
 		}
+	}
+
+	// updates filename input
+	if m.filepickerStatus == NewFileName {
+		m.filenameInput, filepickerCmd = m.filenameInput.Update(msg)
 	}
 
 	return m, tea.Batch(cmd, editorCmd, filepickerCmd)
@@ -277,7 +306,20 @@ func (m model) View() string {
 	}
 
 	// render filepicker
-	if m.filepickerStatus != None {
+	if m.filepickerStatus == NewFileName {
+		title := "Input file name"
+
+		content = lipgloss.Place(
+			m.width, m.height,
+			lipgloss.Center, lipgloss.Center,
+			lipgloss.JoinVertical(
+				lipgloss.Left,
+				defaultTitleStyle.Render(title), "\n\n",
+				m.filenameInput.View(),
+			),
+		)
+
+	} else if m.filepickerStatus != None {
 		var title string
 		switch m.filepickerStatus {
 		case OpenFile:
