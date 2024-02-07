@@ -1,6 +1,12 @@
 <!-- 197 DeepPink2 #ff005f -->
 # coconut
 
+<h1 align="center">
+  <a href="https://github.com/LucasPeixotg/coconut">
+    <img src="https://raw.githubusercontent.com/LucasPeixotg/coconut/main/banner.png" alt="coconut banner">
+  </a>
+</h1>
+
 <p align="center">
   <img alt="Github top language" src="https://img.shields.io/github/languages/top/LucasPeixotg/coconut?color=ff005f">
   <img alt="Github issues" src="https://img.shields.io/github/issues/LucasPeixotg/coconut?color=ff005f" />
