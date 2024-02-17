@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 	"path"
+	"path/filepath"
 
 	"github.com/charmbracelet/bubbles/filepicker"
 	"github.com/charmbracelet/bubbles/help"
@@ -119,9 +120,8 @@ func newModel() *model {
 	}
 
 	m.filepicker.CurrentDirectory, _ = os.UserHomeDir()
-	m.filepicker.ShowHidden = true
+	m.filepicker.ShowHidden = false
 	m.filepicker.Styles.Permission = lipgloss.NewStyle().Width(0)
-
 	m.filenameInput.Placeholder = "File name"
 
 	return m
@@ -160,13 +160,13 @@ func (m *model) newEditor(filepath, filename string) {
 	m.tabs = append(m.tabs, tab)
 }
 
-func (m *model) loadEditor(path string) {
+func (m *model) loadEditor(p string) {
 	tab := tab.Tab{}
 
 	var err error
-	tab.Content, err = editor.OpenFileEditor(m.width, m.height-3, path)
+	tab.Content, err = editor.OpenFileEditor(m.width, m.height-3, p)
 
-	tab.SetTitle("README.md")
+	tab.SetTitle(filepath.Base(p))
 
 	// this panic is temporary (just for tests)
 	if err != nil {
