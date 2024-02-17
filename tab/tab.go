@@ -80,7 +80,7 @@ func (t Tab) View(index, activeIndex, tabQuant int) string {
 var inactiveTabStyle = lipgloss.NewStyle().
 	Foreground(lipgloss.Color("#7d7d7d")).
 	Padding(0, 2, 0, 2).
-	BorderForeground(lipgloss.Color("#7d7d7d"))
+	BorderForeground(lipgloss.Color("167"))
 
 var activeTabStyle = lipgloss.NewStyle().
 	Inherit(inactiveTabStyle).
