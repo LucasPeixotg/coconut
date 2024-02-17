@@ -1,14 +1,14 @@
 package tab
 
 import (
-	"coconut/editor"
+	"coconut/models"
 
 	"github.com/charmbracelet/lipgloss"
 )
 
 type Tab struct {
 	title   string
-	Content *editor.Editor
+	Content *models.Editor
 }
 
 type borderSide struct {

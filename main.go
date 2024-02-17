@@ -1,7 +1,7 @@
 package main
 
 import (
-	"coconut/editor"
+	"coconut/models"
 	"coconut/tab"
 	"fmt"
 	"os"
@@ -149,7 +149,7 @@ func (m *model) newEditor(filepath, filename string) {
 	tab := tab.Tab{}
 
 	var err error
-	tab.Content, err = editor.NewFileEditor(m.width, m.height-3, path.Join(filepath, filename))
+	tab.Content, err = models.NewFileEditor(m.width, m.height-3, path.Join(filepath, filename))
 
 	tab.SetTitle(filename)
 
@@ -165,7 +165,7 @@ func (m *model) loadEditor(p string) {
 	tab := tab.Tab{}
 
 	var err error
-	tab.Content, err = editor.OpenFileEditor(m.width, m.height-3, p)
+	tab.Content, err = models.OpenFileEditor(m.width, m.height-3, p)
 
 	tab.SetTitle(filepath.Base(p))
 
@@ -232,8 +232,8 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case key.Matches(msg, m.keys.SaveFile):
 			// save current editor
 			if len(m.tabs) > 0 {
-				err := m.tabs[m.activeTab].Content.Save()
-
+				//err := m.tabs[m.activeTab].Content.Save()
+				var err error = nil
 				// temporary panic just for tests
 				if err != nil {
 					panic("error while saving file: " + err.Error())
