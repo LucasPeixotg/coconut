@@ -21,6 +21,7 @@ func main() {
 	// new program
 	p := tea.NewProgram(newModel(),
 		tea.WithAltScreen(), // fullscreen
+		//tea.WithMouseCellMotion(), // support scroll with mouse wheel
 	)
 
 	// start
