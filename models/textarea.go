@@ -3,6 +3,7 @@ package models
 import (
 	"fmt"
 
+	"github.com/charmbracelet/bubbles/cursor"
 	"github.com/charmbracelet/bubbles/key"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
@@ -27,11 +28,12 @@ type keymap struct {
 	//viewDown key.Binding
 }
 
-// cursor
-type cursor struct {
+// cursorObject
+type cursorObject struct {
 	line   int
 	start  int
 	lenght int
+	cModel cursor.Model
 }
 
 var cursorStyle = lipgloss.NewStyle().
@@ -41,7 +43,7 @@ var cursorStyle = lipgloss.NewStyle().
 
 // model that holds current state
 type textareaModel struct {
-	cursors []*cursor
+	cursors []*cursorObject
 	keys    keymap
 	viewy   int
 	viewx   int
@@ -87,7 +89,7 @@ func newTextarea(width, height int) *textareaModel {
 		prompt: "│ %-3d  ",
 	}
 
-	m.cursors = append(m.cursors, &cursor{0, 0, 0})
+	m.cursors = append(m.cursors, &cursorObject{0, 0, 0, cursor.New()})
 	m.content = append(m.content, "")
 
 	return m
@@ -99,6 +101,8 @@ func (model *textareaModel) Init() tea.Cmd {
 }
 
 func (model *textareaModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+	var cmds []tea.Cmd
+
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
 		switch {
@@ -114,7 +118,14 @@ func (model *textareaModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			model.write(msg.Runes)
 		}
 	}
-	return model, nil
+
+	for i := 0; i < len(model.cursors); i++ {
+		var temp tea.Cmd
+		model.cursors[i].cModel, temp = model.cursors[i].cModel.Update(msg)
+		cmds = append(cmds, temp)
+	}
+
+	return model, tea.Batch(cmds...)
 }
 
 func (model *textareaModel) View() string {
@@ -127,7 +138,9 @@ func (model *textareaModel) View() string {
 	return content
 }
 
-// file related functions
+/*
+file related functions
+*/
 func (model *textareaModel) LoadFile(filepath string) {}
 
 // cursors and editing functions
