@@ -75,6 +75,9 @@ $ git clone https://github.com/lucaspeixotg/coconut
 # Access
 $ cd coconut
 
+# Access
+$ go mod tidy
+
 # Start
 $ go run .
 
