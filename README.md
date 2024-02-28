@@ -75,7 +75,7 @@ $ git clone https://github.com/lucaspeixotg/coconut
 # Access
 $ cd coconut
 
-# Access
+# Install dependencies
 $ go mod tidy
 
 # Start
