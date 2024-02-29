@@ -24,8 +24,8 @@ type keymap struct {
 	//wordBackward key.Binding
 
 	//
-	//viewUp   key.Binding
-	//viewDown key.Binding
+	viewUp   key.Binding
+	viewDown key.Binding
 }
 
 // cursorObject
@@ -45,9 +45,14 @@ var cursorStyle = lipgloss.NewStyle().
 type textareaModel struct {
 	cursors []*cursorObject
 	keys    keymap
-	viewy   int
-	viewx   int
 	prompt  string
+
+	// visibility, size and scroll
+	firstVisibleLineIndex int
+	viewy                 int
+	viewx                 int
+	height                int
+	maxHeight             int
 
 	// temporary
 	// it will be updated in the future to use a better data structure (probably piece table)
@@ -80,19 +85,46 @@ func newTextarea(width, height int) *textareaModel {
 		cursorDown: key.NewBinding(
 			key.WithKeys("down"),
 		),
+		viewUp: key.NewBinding(
+			key.WithKeys("ctrl+up"),
+		),
+		viewDown: key.NewBinding(
+			key.WithKeys("ctrl+down"),
+		),
 	}
 
 	m := &textareaModel{
-		keys:   keys,
-		viewy:  0,
-		viewx:  0,
-		prompt: "│ %-3d  ",
+		keys:                  keys,
+		viewy:                 0,
+		viewx:                 0,
+		maxHeight:             height,
+		height:                1,
+		firstVisibleLineIndex: 0,
+		prompt:                "│ %-3d  ",
 	}
 
 	m.cursors = append(m.cursors, &cursorObject{0, 0, 0, cursor.New()})
-	m.content = append(m.content, "")
+	m.content = append(m.content, "a")
 
 	return m
+}
+
+func (model *textareaModel) scrollUp() {
+	if model.firstVisibleLineIndex != 0 {
+		if model.height < model.maxHeight {
+			model.height++
+		}
+		model.firstVisibleLineIndex--
+	}
+}
+
+func (model *textareaModel) scrollDown() {
+	if model.height != 1 {
+		if model.firstVisibleLineIndex+1+model.height < len(model.content) {
+			model.height--
+		}
+		model.firstVisibleLineIndex++
+	}
 }
 
 // tea Model interface
@@ -108,12 +140,10 @@ func (model *textareaModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		switch {
 		case key.Matches(msg, model.keys.newline):
 			model.newLine()
-		case key.Matches(msg, model.keys.cursorUp):
-			// TODO:
-
-		case key.Matches(msg, model.keys.cursorDown):
-			// TODO:
-
+		case key.Matches(msg, model.keys.viewUp):
+			//model.scrollUp()
+		case key.Matches(msg, model.keys.viewDown):
+			model.scrollDown()
 		default:
 			model.write(msg.Runes)
 		}
@@ -130,9 +160,9 @@ func (model *textareaModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 func (model *textareaModel) View() string {
 	content := ""
-	for i, val := range model.content {
-		content += fmt.Sprintf(model.prompt, i)
-		content += val + "\n"
+	for i := 0; i < model.height; i++ {
+		content += fmt.Sprintf(model.prompt, model.firstVisibleLineIndex+i)
+		content += model.content[model.firstVisibleLineIndex+i] + "\n"
 	}
 
 	return content
@@ -171,6 +201,14 @@ func (model *textareaModel) newLine() {
 	}
 	model.content = new_content
 
+	// updates cursor
 	lastCursor.line++
 	lastCursor.start = 0
+
+	// scroll if necessary
+	if model.height+1 > model.maxHeight {
+		model.scrollDown()
+	} else {
+		model.height++
+	}
 }
