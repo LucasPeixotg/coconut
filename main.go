@@ -4,23 +4,34 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/LucasPeixotg/coconut/editor"
+	"github.com/charmbracelet/bubbles/key"
 	tea "github.com/charmbracelet/bubbletea"
 )
 
 type State uint8
 
 const (
-	editor State = iota
-	filepicker
+	editorState State = iota
+	filepickerState
 )
 
 type MainModel struct {
-	state  State
-	width  int
-	height int
+	state    State
+	quitting bool
 
 	currentView tea.Model
 }
+
+func New() MainModel {
+	m := MainModel{}
+	// initial model options
+	m.state = editorState
+	m.currentView = editor.New(keys)
+	return m
+}
+
+// tea.Model implementation
 
 func (model MainModel) Init() tea.Cmd {
 	return nil
@@ -29,12 +40,25 @@ func (model MainModel) Init() tea.Cmd {
 func (model MainModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	var cmds []tea.Cmd
 
-	switch model.state {
-	case initial:
-		// state independent messages
-		switch msg.(type) {
-		case tea.WindowSizeMsg:
+	// state independent keys
+	switch msg := msg.(type) {
+	case tea.KeyMsg:
+		switch {
+		case key.Matches(msg, keys.Quit):
+			model.quitting = true
+			cmds = append(cmds, tea.Quit)
+		}
 
+	}
+
+	switch model.state {
+	case editorState:
+		// editor type assertion
+		e, _ := model.currentView.(editor.Model)
+
+		switch msg := msg.(type) {
+		case tea.WindowSizeMsg:
+			e.SetSize(msg.Width, msg.Height)
 		}
 	}
 
@@ -42,18 +66,17 @@ func (model MainModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (model MainModel) View() string {
-	return ""
+	if model.quitting {
+		return ""
+	}
+
+	return model.currentView.View()
 }
 
-func NewMainModel() MainModel {
-	m := MainModel{}
-	// initial model options
-	m.state = editor
-	return m
-}
+// run
 
 func main() {
-	if _, err := tea.NewProgram(NewMainModel(), tea.WithAltScreen()).Run(); err != nil {
+	if _, err := tea.NewProgram(New(), tea.WithAltScreen()).Run(); err != nil {
 		fmt.Printf("Uh Oh! Something unexpected happened: %v\n", err)
 		os.Exit(1)
 	}

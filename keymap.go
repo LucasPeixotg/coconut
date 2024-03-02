@@ -1,4 +1,4 @@
-package editor
+package main
 
 import "github.com/charmbracelet/bubbles/key"
 
@@ -7,9 +7,10 @@ type keyMap struct {
 	OpenFile   key.Binding
 	NewFolder  key.Binding
 	OpenFolder key.Binding
+	Quit       key.Binding
 }
 
-// used just to implement key.Map interface
+// used just to implement help.keyMap interface
 func (k keyMap) ShortHelp() []key.Binding {
 	return []key.Binding{}
 }
@@ -18,25 +19,29 @@ func (k keyMap) ShortHelp() []key.Binding {
 func (k keyMap) FullHelp() [][]key.Binding {
 	return [][]key.Binding{
 		{k.NewFile, k.OpenFile},
-		{k.NewFolder, k.NewFolder},
+		{k.NewFolder, k.NewFolder, k.Quit},
 	}
 }
 
 var keys = keyMap{
 	NewFile: key.NewBinding(
-		key.WithKeys("up", "k"),
-		key.WithHelp("↑/k", "move up"),
+		key.WithKeys("ctrl+n"),
+		key.WithHelp("ctrl + n", "new file"),
 	),
 	OpenFile: key.NewBinding(
-		key.WithKeys("down", "j"),
-		key.WithHelp("↓/j", "move down"),
+		key.WithKeys("ctrl+o"),
+		key.WithHelp("ctrl + o", "open file"),
 	),
 	NewFolder: key.NewBinding(
-		key.WithKeys("left", "h"),
-		key.WithHelp("←/h", "move left"),
+		key.WithKeys("ctrl+d"),
+		key.WithHelp("ctrl  + d", "open directory"),
 	),
 	OpenFolder: key.NewBinding(
-		key.WithKeys("right", "l"),
-		key.WithHelp("→/l", "move right"),
+		key.WithKeys("ctrl+f"),
+		key.WithHelp("ctrl + f", "new directory"),
+	),
+	Quit: key.NewBinding(
+		key.WithKeys("ctrl+q"),
+		key.WithHelp("ctrl + q", "quit"),
 	),
 }
