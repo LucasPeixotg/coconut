@@ -13,10 +13,9 @@ type Model struct {
 	explorer explorer.Model
 	help     help.Model
 
-	mainKeys help.KeyMap
+	helpStyle lipgloss.Style
 
-	width  int
-	height int
+	mainKeys help.KeyMap
 
 	// focus state
 	//	0 = tab content
@@ -24,13 +23,18 @@ type Model struct {
 	focusState uint8
 }
 
-func New(mainKeys help.KeyMap) Model {
-	model := Model{
-		tab:        tabs.New(),
-		explorer:   explorer.New(),
-		help:       help.New(),
+func New(mainKeys help.KeyMap, width, height int) *Model {
+	explorerWidth := calcExplorerWidth(width)
+	contentWidth := width - explorerWidth
+	contentHeight := height - tabHeight
+
+	model := &Model{
 		focusState: 0,
 		mainKeys:   mainKeys,
+		help:       help.New(),
+		helpStyle:  getHelpStyle(contentWidth, contentHeight),
+		explorer:   explorer.New(explorerWidth, height),
+		tab:        tabs.New(contentWidth, tabHeight, contentHeight),
 	}
 
 	// show help in expanded view
@@ -39,30 +43,35 @@ func New(mainKeys help.KeyMap) Model {
 	return model
 }
 
-func (model *Model) SetSize(width, height int) {
-	model.width = width
-	model.height = height
-}
-
 // tea.Model implementation
 
 func (model Model) Init() tea.Cmd {
-	return nil
+	return tea.ClearScreen
 }
 
 func (model Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
-	//var cmds []tea.Cmd
+	var cmds []tea.Cmd
+	var tmp tea.Cmd
 
-	return model, nil
+	model.explorer, tmp = model.explorer.Update(msg)
+	cmds = append(cmds, tmp)
+
+	model.tab, tmp = model.tab.Update(msg)
+	cmds = append(cmds, tmp)
+
+	return model, tea.Batch(cmds...)
 }
 
 func (model Model) View() string {
 	var content string
 
 	if model.tab.IsEmpty() {
-		content = lipgloss.JoinVertical(lipgloss.Left, model.tab.View(), model.help.View(model.mainKeys))
+		styledHelp := model.helpStyle.Render(model.help.View(model.mainKeys))
+		content = lipgloss.JoinVertical(lipgloss.Center, model.tab.View(), styledHelp)
 	}
 	content = lipgloss.JoinHorizontal(0, model.explorer.View(), content)
+
+	//debugger := fmt.Sprintf("width: %v | height: %v\n", model.width, model.height)
 
 	return content
 }

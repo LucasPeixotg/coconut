@@ -2,6 +2,7 @@ package tabs
 
 import (
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/charmbracelet/lipgloss"
 )
 
 type pairing struct {
@@ -12,11 +13,20 @@ type pairing struct {
 type Model struct {
 	list    []pairing
 	current int
+
+	width         int
+	tabHeight     int
+	contentHeight int
+	style         lipgloss.Style
 }
 
-func New() Model {
+func New(width, tabHeight, contentHeight int) Model {
 	return Model{
-		current: 0,
+		current:       0,
+		width:         width,
+		tabHeight:     tabHeight,
+		contentHeight: contentHeight,
+		style:         getStyle(width, tabHeight),
 	}
 }
 
@@ -26,12 +36,22 @@ func (model Model) Init() tea.Cmd {
 	return nil
 }
 
-func (model Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+func (model Model) Update(msg tea.Msg) (Model, tea.Cmd) {
 	return model, nil
 }
 
 func (model Model) View() string {
-	return ""
+	content := ""
+
+	if !model.IsEmpty() {
+		for _, tab := range model.list {
+			tabString := lipgloss.PlaceVertical(model.tabHeight, lipgloss.Center, tab.title)
+			tabString = tabStyle.Render(tabString)
+			content = lipgloss.JoinHorizontal(0, content, tabString)
+		}
+	}
+
+	return model.style.Render(content)
 }
 
 // own functions

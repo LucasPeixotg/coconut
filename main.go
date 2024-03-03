@@ -14,27 +14,38 @@ type State uint8
 const (
 	editorState State = iota
 	filepickerState
+	initializingState
+	quittingState
 )
 
 type MainModel struct {
-	state    State
-	quitting bool
+	state State
 
-	currentView tea.Model
+	width  int
+	height int
+
+	editorView *editor.Model
 }
 
 func New() MainModel {
 	m := MainModel{}
+
 	// initial model options
-	m.state = editorState
-	m.currentView = editor.New(keys)
+	m.state = initializingState
 	return m
+}
+
+func (model *MainModel) SetSize(width, height int) {
+	model.width = width
+	model.height = height
+
+	model.editorView = editor.New(keys, width, height)
 }
 
 // tea.Model implementation
 
 func (model MainModel) Init() tea.Cmd {
-	return nil
+	return tea.SetWindowTitle("Coconut")
 }
 
 func (model MainModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
@@ -42,23 +53,17 @@ func (model MainModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 	// state independent keys
 	switch msg := msg.(type) {
+	case tea.WindowSizeMsg:
+		model.SetSize(msg.Width, msg.Height)
+
+		if model.state == initializingState {
+			model.state = editorState
+		}
 	case tea.KeyMsg:
 		switch {
 		case key.Matches(msg, keys.Quit):
-			model.quitting = true
+			model.state = quittingState
 			cmds = append(cmds, tea.Quit)
-		}
-
-	}
-
-	switch model.state {
-	case editorState:
-		// editor type assertion
-		e, _ := model.currentView.(editor.Model)
-
-		switch msg := msg.(type) {
-		case tea.WindowSizeMsg:
-			e.SetSize(msg.Width, msg.Height)
 		}
 	}
 
@@ -66,11 +71,16 @@ func (model MainModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (model MainModel) View() string {
-	if model.quitting {
-		return ""
+	switch model.state {
+	case quittingState:
+		return "bye!"
+	case initializingState:
+		return "initializing..."
+	case editorState:
+		return model.editorView.View()
 	}
 
-	return model.currentView.View()
+	return "unhandled state"
 }
 
 // run
