@@ -21,6 +21,8 @@
 	🚧 under construction...  🚧
 </h4>
 
+![Example Image](example.png)
+
 <hr> 
 
 <p align="center">
