@@ -1,8 +1,6 @@
 package explorer
 
 import (
-	"fmt"
-
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 )
@@ -33,9 +31,6 @@ func (model Model) Update(msg tea.Msg) (Model, tea.Cmd) {
 
 func (model Model) View() string {
 	content := "Explorer\n\n"
-
-	content += fmt.Sprintf("width: %v\n", model.width)
-	content += fmt.Sprintf("height: %v\n", model.height)
 
 	return model.style.Render(content)
 }
