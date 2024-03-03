@@ -5,6 +5,7 @@ import (
 	"os"
 
 	"github.com/LucasPeixotg/coconut/editor"
+	"github.com/LucasPeixotg/coconut/utils"
 	"github.com/charmbracelet/bubbles/key"
 	tea "github.com/charmbracelet/bubbletea"
 )
@@ -24,7 +25,7 @@ type MainModel struct {
 	width  int
 	height int
 
-	editorView *editor.Model
+	editorView editor.Model
 }
 
 func New() MainModel {
@@ -39,7 +40,7 @@ func (model *MainModel) SetSize(width, height int) {
 	model.width = width
 	model.height = height
 
-	model.editorView = editor.New(keys, width, height)
+	model.editorView = editor.New(width, height)
 }
 
 // tea.Model implementation
@@ -60,10 +61,25 @@ func (model MainModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			model.state = editorState
 		}
 	case tea.KeyMsg:
-		switch {
-		case key.Matches(msg, keys.Quit):
+		switch msg.String() {
+		case "ctrl+q":
 			model.state = quittingState
 			cmds = append(cmds, tea.Quit)
+		}
+	}
+
+	var tmp tea.Cmd
+	switch model.state {
+	case editorState:
+		model.editorView, tmp = model.editorView.Update(msg)
+		cmds = append(cmds, tmp)
+
+		switch msg := msg.(type) {
+		case tea.KeyMsg:
+			switch {
+			case key.Matches(msg, utils.FileKeys.NewFile):
+				cmds = append(cmds, utils.NewFileCmd)
+			}
 		}
 	}
 

@@ -2,13 +2,15 @@ package editor
 
 import "github.com/charmbracelet/lipgloss"
 
-const tabHeight = 3
-const expWidthRatio = float32(.2)
+const backgroundColor = "#000000"
+
+const tabHeight = 2
+const expWidthRatio = float32(.15)
 
 func getHelpStyle(width, height int) lipgloss.Style {
 	return lipgloss.NewStyle().
-		Align(lipgloss.Center, lipgloss.Center).
 		Width(width).
 		Height(height).
-		Background(lipgloss.Color("#000000"))
+		Align(lipgloss.Center, lipgloss.Center).
+		Background(lipgloss.Color(backgroundColor))
 }

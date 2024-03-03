@@ -1,4 +1,4 @@
-package main
+package utils
 
 import "github.com/charmbracelet/bubbles/key"
 
@@ -23,7 +23,7 @@ func (k keyMap) FullHelp() [][]key.Binding {
 	}
 }
 
-var keys = keyMap{
+var FileKeys = keyMap{
 	NewFile: key.NewBinding(
 		key.WithKeys("ctrl+n"),
 		key.WithHelp("ctrl + n", "new file"),
@@ -39,9 +39,5 @@ var keys = keyMap{
 	OpenFolder: key.NewBinding(
 		key.WithKeys("ctrl+f"),
 		key.WithHelp("ctrl + f", "new directory"),
-	),
-	Quit: key.NewBinding(
-		key.WithKeys("ctrl+q"),
-		key.WithHelp("ctrl + q", "quit"),
 	),
 }
