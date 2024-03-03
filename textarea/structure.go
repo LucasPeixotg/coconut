@@ -8,6 +8,7 @@ type cursor struct {
 
 type node struct {
 	data     string
+	cursor   *cursor
 	previous *node
 	next     *node
 }
