@@ -15,8 +15,15 @@ func getStyle(width, height int) lipgloss.Style {
 }
 
 var promptStyle = lipgloss.NewStyle().
-	Border(lipgloss.NormalBorder(), false, true, false, false).
 	BorderBackground(lipgloss.Color(backgroundColor)).
 	BorderForeground(lipgloss.Color("#444444")).
 	Width(4).
 	MaxWidth(5)
+
+var cursorStyle = lipgloss.NewStyle().
+	Background(lipgloss.Color("#eeeeee")).
+	Foreground(lipgloss.Color(backgroundColor))
+
+var textStyle = lipgloss.NewStyle().
+	Background(lipgloss.Color(backgroundColor)).
+	Foreground(lipgloss.Color("#eeeeee"))

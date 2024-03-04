@@ -11,8 +11,13 @@ import (
 type Model struct {
 	filepath string
 
-	content *node
-	cursors []cursor
+	head     *node
+	viewNode *node
+	cursors  []*cursor
+
+	currentViewHeight int
+	maxViewHeight     int
+	offsetHeight      int
 
 	width  int
 	height int
@@ -21,13 +26,17 @@ type Model struct {
 
 func New(width, height int) Model {
 	m := Model{
-		width:   width,
-		height:  height,
-		style:   getStyle(width, height),
-		content: newNode(""),
-		cursors: []cursor{},
+		width:             width,
+		height:            height,
+		style:             getStyle(width, height),
+		head:              newNode(""),
+		currentViewHeight: 1,
+		offsetHeight:      0,
 	}
-	m.cursors = append(m.cursors, cursor{m.content, 0, 0})
+	m.viewNode = m.head
+	m.maxViewHeight = height - m.style.GetPaddingTop() - m.style.GetPaddingBottom() - m.style.GetMarginBottom() - m.style.GetMarginTop()
+	m.cursors = append(m.cursors, &cursor{m.head, 0, 0})
+	m.head.cursor = m.cursors[0]
 
 	return m
 }
@@ -41,8 +50,23 @@ func (model *Model) newLine() {
 	for _, c := range model.cursors {
 		// TODO: put content in the next line
 		appendNode(c.line, "")
+
+		c.line.cursor = nil
 		c.line = c.line.next
+		c.line.cursor = c
+
+		if model.currentViewHeight+1 > model.maxViewHeight {
+			model.viewNode = model.viewNode.next
+			model.offsetHeight++
+			model.currentViewHeight++
+		} else {
+			model.currentViewHeight++
+		}
 	}
+}
+
+func (model *Model) write() {
+	// TODO:
 }
 
 // tea.Model implementation
@@ -57,6 +81,8 @@ func (model Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		switch {
 		case key.Matches(msg, keys.NewLine):
 			model.newLine()
+		default:
+			model.write()
 		}
 	}
 
@@ -64,15 +90,24 @@ func (model Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (model Model) View() string {
-	content := ""
+	var content string
 
-	current := model.content
-	for i := 0; i < model.height && current != nil; i++ {
-		content += promptStyle.Render(fmt.Sprint(i)) + current.data + "\n"
+	current := model.viewNode
+	for i := 0; i < model.currentViewHeight && current != nil; i++ {
+		line := ""
+		line += current.data + " \n"
+		if current.cursor != nil {
+			if current.cursor.len > 0 {
+				// selected
+			} else {
+				// normal cursor
+				line = lipgloss.StyleRunes(line, []int{current.cursor.start}, cursorStyle, textStyle)
+			}
+		}
+		content += promptStyle.Render(fmt.Sprint(model.offsetHeight+i+1)) + line
+
 		current = current.next
 	}
 
 	return model.style.Render(content)
-
-	//return model.style.Render(content)
 }

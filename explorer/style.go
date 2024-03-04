@@ -6,7 +6,7 @@ func getStyle(width, height int) lipgloss.Style {
 	return lipgloss.NewStyle().
 		Width(width-1).
 		MaxWidth(width).
-		Padding(2, 0, 0, 2).
+		Padding(1, 0, 0, 2).
 		Height(height).
 		MaxHeight(height).
 		Border(lipgloss.NormalBorder(), false, true, false, false).

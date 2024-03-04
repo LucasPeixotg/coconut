@@ -4,7 +4,7 @@ import "github.com/charmbracelet/lipgloss"
 
 const backgroundColor = "#000000"
 
-const tabHeight = 2
+const tabHeight = 4
 const expWidthRatio = float32(.15)
 
 func getHelpStyle(width, height int) lipgloss.Style {

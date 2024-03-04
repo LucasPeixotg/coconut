@@ -18,6 +18,7 @@ func newNode(data string) *node {
 		previous: nil,
 		next:     nil,
 		data:     data,
+		cursor:   nil,
 	}
 }
 
